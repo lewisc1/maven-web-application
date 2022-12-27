@@ -33,21 +33,20 @@ pipeline{
       steps{
           deploy adapters: [tomcat9(credentialsId: 'tomcat-access', path: '', url: 'http://172.31.94.21:8080/')], contextPath: null, war: 'target/*war'  }
     }     
-  }
-}
-post{
-    always{
+ }
+post {
+    always {
       emailext body: '''Hey guys
-Please check build status, recipientProviders: [developers(), contributor(), requestor()], subject: 'Project Update'
+Please check build status''', recipientProviders: [developers(), contributor(), requestor()], subject: 'Project Update'
     }
-    success{
-      emailext body: '''Hey guys
+    success {
+    emailext body: '''Hey Guys,
 Good job build and deployment is successful.
 
 Thanks
-Lewis, recipientProviders: [developers(), contributor(), requestor()], subject: 'Project Update'
-    } 
-    failure{
+Lewis''', recipientProviders: [contributor(), developers(), requestor()], subject: 'Project Update'
+    }
+    failure {
       emailext body: '''Hey guys
 Build failed. Please resolve issues.
 
@@ -55,6 +54,5 @@ Thanks
 Lewis 
 +1 437 215 2483''', recipientProviders: [buildUser(), developers()], subject: 'success', to: 'paypal-team@gmail.com'
     }
-  }  
 }
 }
