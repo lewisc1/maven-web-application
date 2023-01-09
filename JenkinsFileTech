@@ -1,0 +1,55 @@
+@Library('Tech-sharedlibs') _
+pipeline{
+  agent any 
+  tools {
+    maven "maven3.8.6"
+  }  
+  stages {
+    //agent (note you can have agent for each stage, optional --already we have agent any, this will take care of the project)
+    stage('1GetCode'){
+      steps{
+        sh "echo 'cloning the latest application version' "
+        git branch: 'master', url: 'https://github.com/lewisc1/maven-web-application'
+      }
+    }
+	stage("Test+Build"){ 
+	  steps{
+		tech("Build")
+      }
+    }
+    stage('4CodeQuality'){
+      steps{
+        sh "echo 'Perfoming CodeQualityAnalysis' "
+        tech("SonarQube Quality Report")
+      }
+    } 
+    stage('5uploadNexus'){
+      steps{
+       tech("Upload Into Nexus")
+      }
+    }  
+    stage('8deploy2prod'){
+      steps{
+          deploy adapters: [tomcat9(credentialsId: 'tomcat-access', path: '', url: 'http://172.31.94.21:8080/')], contextPath: null, war: 'target/*war'  }
+    }     
+ }
+post {
+    always {
+      emailext body: '''Hey guys
+Please check build status''', recipientProviders: [developers(), contributor(), requestor()], subject: 'Project Update'
+    }
+    success {
+    emailext body: '''Hey Guys,
+Good job build and deployment is successful.
+Thanks
+Lewis''', recipientProviders: [contributor(), developers(), requestor()], subject: 'Project Update'
+    }
+    failure {
+      emailext body: '''Hey guys
+Build failed. Please resolve issues.
+Thanks
+Lewis 
++1 437 215 2483''', recipientProviders: [buildUser(), developers()], subject: 'success', to: 'paypal-team@gmail.com'
+    }
+}
+}
